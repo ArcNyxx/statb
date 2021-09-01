@@ -38,9 +38,10 @@ void leave(void) {
 void pop(void) {
     audio();
     memory();
+    battery();
+
     memcpy(ptr, internetBuf, internetLen);
     ptr += internetLen;
-    battery();
     datetime();
     memcpy(ptr, " doggo-dwm ", 12);
 }
