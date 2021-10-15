@@ -11,23 +11,6 @@ static const char mem_path[] = "/proc/meminfo";
 #define BAT_PATH_CAP "/capacity"
 #define BAT_PATH_STAT "/status"
 
-static inline char
-bat_stat_char(char c)
-{
-	switch (c) {
-	case 'F':
-		return 'f';
-	case 'C':
-		return '+';
-	case 'D':
-		return '-';
-	case 'U':
-		return 'x';
-	default:
-		return 0;
-	}
-}
-
 static const char internet_unavail[] = "Unavailable";
 
 static const char wifi_card[] = "wlp0s20f3";
@@ -38,10 +21,12 @@ static char date_fmt[] = "%a %b %dth %H:%M:%S %Z";
 static const char sep_open[] = " [", sep_close[] = "]";
 static const char name[] = " doggo-dwm ";
 
+#define FUNC(func, iden) { func, iden, sizeof(iden) - 1 }
+
 static const Func funcs[] = {
-	{ audio, "Audio: ", 7 },
-	{ memory, "Memory: ", 8 },
-	{ battery, "Battery: ", 9 },
-	{ internet, "Internet: ", 10 },
-	{ datetime, "Datetime: ", 10 }
+	FUNC(audio, "Audio: "),
+	FUNC(memory, "Memory: "),
+	FUNC(battery, "Battery: "),
+	FUNC(internet, "Internet: "),
+	FUNC(datetime, "Datetime: ")
 };

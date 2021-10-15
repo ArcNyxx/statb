@@ -21,6 +21,7 @@ struct func {
 
 void term(const int sig);
 int itoa(char *const buf, unsigned int num);
+static inline char bat_stat_char(char c);
 
 char *audio(char *const buf);
 char *memory(char *const buf);
@@ -44,7 +45,7 @@ int
 itoa(char *const buf, unsigned int num)
 {
 	int i = 0, j = 0;
-	char tmpbuf[3] = "0";
+	char tmpbuf[3];
 	do {
 		tmpbuf[i] = '0' + (num % 10);
 		num /= 10;
@@ -56,6 +57,23 @@ itoa(char *const buf, unsigned int num)
 		++j;
 	}
 	return i;
+}
+
+static inline char
+bat_stat_char(char c)
+{
+        switch (c) {
+        case 'F':
+                return 'f';
+        case 'C':
+                return '+';
+        case 'D':
+                return '-';
+        case 'U':
+                return 'x';
+        default:
+                return 0;
+        }
 }
 
 char *
@@ -127,7 +145,7 @@ battery(char *const buf)
 	}
 
 	buf[0] = bat_stat_char(stat);
-	memcpy(buf + 1, tmpbuf, len);
+	memcpy(buf + 1, tmpbuf, len -= len == 3);
 	buf[len + 1] = '%';
 	return buf + len + 2;
 }
