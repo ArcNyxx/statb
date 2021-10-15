@@ -1,3 +1,4 @@
+# see LICENCE file for licensing information
 # statb version
 VERSION = 0.1.0
 

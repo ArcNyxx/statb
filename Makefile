@@ -1,5 +1,5 @@
+# see LICENCE file for licensing information
 # statb - simple info bar for dwm
-# See LICENSE file for copyright and license details.
 .POSIX:
 
 include config.mk
@@ -33,7 +33,7 @@ statb: $(OBJ)
 	$(CC) -o $@ $(OBJ) $(STATBLDFLAGS)
 
 clean:
-	rm -f st $(OBJ) statb-$(VERSION).tar.gz
+	rm -f statb $(OBJ) statb-$(VERSION).tar.gz
 
 dist: clean
 	mkdir -p statb-$(VERSION)

@@ -1,3 +1,6 @@
+/* see LICENCE file for licensing information */
+/* simple stat bar for dwm */
+
 #include <alsa/asoundlib.h>
 #include <arpa/inet.h>
 #include <errno.h>
