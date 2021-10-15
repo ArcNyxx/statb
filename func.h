@@ -1,11 +1,10 @@
 #ifndef FUNC_H
 #define FUNC_H
 
-int internet(void);
+char *audio(char *const buf);
+char *memory(char *const buf);
+char *battery(char *const buf);
+char *internet(char *const buf);
+char *datetime(char *const buf);
 
-void audio(void);
-void memory(void);
-void battery(void);
-void datetime(void);
-
-#endif
+#endif /* FUNC_H */

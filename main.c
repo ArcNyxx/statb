@@ -7,98 +7,92 @@
 #include <unistd.h>
 #include <X11/Xlib.h>
 
-#define BAT "BAT1"
-#define BAT_PATH "/sys/class/power_supply/" BAT
-
-char buf[256], *ptr;
-int batCap, batStat, memStat;
-const char *batCapPath = BAT_PATH "/capacity";
-const char *batStatPath = BAT_PATH "/status";
-const char *wifiCard = "wlp0s20f3";
-const char *card = "default", *mixer = "Master";
-unsigned char internetLen;
-char internetBuf[23] = " [IP: ";
-
 #include "func.h"
 
+static void term(const int sig);
+
 static volatile sig_atomic_t running = 1;
-static Display *dpy;
+unsigned int batcap_fd, batstat_fd, memstat_fd;
 
-void term(const int sig) {
-    (void)sig;
-    running = 0;
+#include "config.h"
+
+static void
+term(const int sig)
+{
+	(void)sig;
+	running = 0;
 }
 
-void leave(void) {
-    XStoreName(dpy, DefaultRootWindow(dpy), NULL);
-    XFlush(dpy);
-    XCloseDisplay(dpy);
-}
+int
+main(void)
+{
+	struct sigaction act = { 0 };
+	act.sa_handler = term;
+	sigaction(SIGINT, &act, NULL);
+	sigaction(SIGTERM, &act, NULL);
 
-void pop(void) {
-    audio();
-    memory();
-    battery();
+	batcap_fd = open(BAT_PATH BAT BAT_PATH_CAP, O_RDONLY);
+	batstat_fd = open(BAT_PATH BAT BAT_PATH_STAT, O_RDONLY);
+	memstat_fd = open(mem_path, O_RDONLY);
+	if (batcap_fd == -1 || batstat_fd == -1 || memstat_fd == -1) {
+		ERR("statb: unable to create file descriptors\n");
+		return 1;
+	}
 
-    memcpy(ptr, internetBuf, internetLen);
-    ptr += internetLen;
-    datetime();
-    memcpy(ptr, " doggo-dwm ", 12);
-}
+	Display *dpy;
+	if ((dpy = XOpenDisplay(NULL)) == NULL) {
+		ERR("statb: unable to open root display window\n");
+		return 1;
+	}
 
-int main(void) {
-    struct sigaction act = { 0 };
-    act.sa_handler = term;
-    sigaction(SIGINT,  &act, NULL);
-    sigaction(SIGTERM, &act, NULL);
-    act.sa_flags |= SA_RESTART;
-    sigaction(SIGUSR1, &act, NULL);
+	struct timespec start, cur;
+	char buf[256], *ptr = (char *)buf;
+	do {
+		if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) {
+			ERR("statb: unable to get time\n");
+			goto exit;
+		}
 
-    if (internet()) {
-        strcpy(internetBuf, " [IP: Unavailable]");
-    }
+		int i;
+		for (i = 0; i < sizeof(funcs) / sizeof(struct func); ++i) {
+			memcpy(ptr, sep_open, sizeof(sep_open) - 1);
+			memcpy(ptr + sizeof(sep_open) - 1, funcs[i].iden, funcs[i].iden_len);
 
-    batCap = open(batCapPath, O_RDONLY);
-    batStat = open(batStatPath, O_RDONLY);
-    memStat = open("/proc/meminfo", O_RDONLY);
-    if (batCap == -1 || batStat == -1 || memStat == -1) {
-        write(STDERR_FILENO, "Unable to open stat files.\n", 27);
-        return 1;
-    }
+			if ((ptr = funcs[i].func(ptr + sizeof(sep_open) +
+				funcs[i].iden_len - 1)) == NULL) {
+				ERR("statb: unable to perform function\n");
+				goto exit;
+			}
 
-    if (!(dpy = XOpenDisplay(0))) {
-        write(STDERR_FILENO, "Unable to open display.\n", 24);
-        return 1;
-    }
-    atexit(leave);
+			memcpy(ptr, sep_close, sizeof(sep_close) - 1);
+			ptr += sizeof(sep_close) - 1;
+		}
+		memcpy(ptr, name, sizeof(name) - 1);
 
-    struct timespec start, curr;
-    do {
-        ptr = (char *)buf;
-        if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) {
-            write(STDERR_FILENO, "Unable to get time.\n", 20);
-            return 1;
-        }
+		ptr = (char *)buf;
+		if (XStoreName(dpy, DefaultRootWindow(dpy), ptr) < 0) {
+			ERR("statb: unable to store name\n");
+			goto exit;
+		}
+		XFlush(dpy);
 
-        pop();
-        if (XStoreName(dpy, DefaultRootWindow(dpy), buf) < 0) {
-            write(STDERR_FILENO, "Unable to store name.\n", 22);
-            return 1;
-        }
-        XFlush(dpy);
-        
-        if (clock_gettime(CLOCK_MONOTONIC, &curr) == -1) {
-            write(STDERR_FILENO, "Unable to get time.\n", 20);
-            return 1;
-        }
-        curr.tv_sec = 0;
-        curr.tv_nsec = curr.tv_nsec - start.tv_nsec +
-                ((curr.tv_nsec < start.tv_nsec) * 1E9);
-        curr.tv_nsec = 5E8 - curr.tv_nsec +
-                ((5E8 < curr.tv_nsec) * 1E9);
-        if (nanosleep(&curr, 0) == -1 && errno != EINTR) {
-            write(STDERR_FILENO, "Unable to sleep.\n", 17);
-            return 1;
-        }
-    } while (running);
+		if (clock_gettime(CLOCK_MONOTONIC, &cur) == -1) {
+			ERR("statb: unable to get time\n");
+			goto exit;
+		}
+		cur.tv_sec = 0;
+		cur.tv_nsec = cur.tv_nsec - start.tv_nsec +
+			((cur.tv_nsec < start.tv_nsec) * 1E9);
+		cur.tv_nsec = 5E8 - cur.tv_nsec + ((5E8 < cur.tv_nsec) * 1E9);
+		if (nanosleep(&cur, NULL) == -1 && errno != EINTR) {
+			ERR("statb: unable to sleep\n");
+			goto exit;
+		}
+	} while (running);
+
+exit:
+	XStoreName(dpy, DefaultRootWindow(dpy), NULL);
+	XFlush(dpy);
+	XCloseDisplay(dpy);
+	return running;
 }
