@@ -1,6 +1,6 @@
 # see LICENCE file for licensing information
 # statb version
-VERSION = 0.1.0
+VERSION = 0.1.1
 
 # paths
 PREFIX = /usr/local
