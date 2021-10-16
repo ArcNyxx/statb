@@ -135,12 +135,11 @@ memory(char *const buf)
 char *
 battery(char *const buf)
 {
-	char tmpbuf[3], stat;
-	int len;
+	char len, stat;
 	if (
 		lseek(batcap_fd, 0, SEEK_SET) == -1 ||
 		lseek(batstat_fd, 0, SEEK_SET) == -1 ||
-		(len = read(batcap_fd, tmpbuf, 3)) == -1 ||
+		(len = read(batcap_fd, buf + 1, 3)) == -1 ||
 		read(batstat_fd, &stat, 1) != 1
 	) {
 		ERR("statb: unable to read battery info\n");
@@ -148,7 +147,7 @@ battery(char *const buf)
 	}
 
 	buf[0] = bat_stat_char(stat);
-	memcpy(buf + 1, tmpbuf, len -= len == 3);
+	len += -(len == 3 && buf[3] == '\n');
 	buf[len + 1] = '%';
 	return buf + len + 2;
 }
@@ -251,7 +250,7 @@ main(void)
 			memcpy(ptr, sep_close, sizeof(sep_close) - 1);
 			ptr += sizeof(sep_close) - 1;
 		}
-		memcpy(ptr, name, sizeof(name) - 1);
+		memcpy(ptr, name, sizeof(name));
 
 		ptr = (char *)buf;
 		if (XStoreName(dpy, DefaultRootWindow(dpy), ptr) < 0) {

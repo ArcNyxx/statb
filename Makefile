@@ -7,8 +7,6 @@ include config.mk
 SRC = statb.c
 OBJ = $(SRC:.c=.o)
 
-CC = gcc --std=c99
-
 all: options statb
 
 options:
