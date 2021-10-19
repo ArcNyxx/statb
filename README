@@ -1,7 +1,6 @@
 statb - info bar
 ================
-statb is a simple status bar for window managers which use WM_NAME for bars.
-It can be used on Linux.
+statb is a simple info bar for window managers which use WM_NAME for bars.
 
 Requirements
 ------------

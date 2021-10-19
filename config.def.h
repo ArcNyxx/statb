@@ -3,6 +3,7 @@
 
 static const char audio_card[] = "default";
 static const char audio_mixer[] = "Master";
+static const char audio_mute[] = "Mute";
 
 static const char mem_path[] = "/proc/meminfo";
 
@@ -22,7 +23,6 @@ static const char sep_open[] = " [", sep_close[] = "]";
 static const char name[] = " doggo-dwm ";
 
 #define FUNC(func, iden) { func, iden, sizeof(iden) - 1 }
-
 static const Func funcs[] = {
 	FUNC(audio, "Audio: "),
 	FUNC(memory, "Memory: "),

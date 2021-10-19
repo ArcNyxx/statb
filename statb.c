@@ -18,8 +18,8 @@ typedef struct func Func;
 
 struct func {
 	char *(*func)(char *const);
-	char *iden;
-	int iden_len;
+	const char *iden;
+	size_t iden_len;
 };
 
 void term(const int sig);
@@ -33,7 +33,7 @@ char *internet(char *const buf);
 char *datetime(char *const buf);
 
 static volatile sig_atomic_t running = 1;
-unsigned int batcap_fd, batstat_fd, memstat_fd;
+int batcap_fd, batstat_fd, memstat_fd;
 
 #include "config.h"
 
@@ -84,28 +84,38 @@ audio(char *const buf)
 {
 	snd_mixer_t *handle;
 	if (
-		snd_mixer_open(&handle, 0) < 0 ||
-		snd_mixer_attach(handle, audio_card) < 0 ||
-		snd_mixer_selem_register(handle, NULL, NULL) < 0 ||
-		snd_mixer_load(handle) < 0
+		snd_mixer_open(&handle, 0) ||
+		snd_mixer_attach(handle, audio_card) ||
+		snd_mixer_selem_register(handle, NULL, NULL) ||
+		snd_mixer_load(handle)
 	) {
 		ERR("statb: unable to load audio mixer\n");
 		return NULL;
 	}
 
-	snd_mixer_selem_id_t *snd;
-	snd_mixer_selem_id_malloc(&snd);
-	snd_mixer_selem_id_set_index(snd, 0);
-	snd_mixer_selem_id_set_name(snd, audio_mixer);
+	snd_mixer_selem_id_t *master;
+	snd_mixer_selem_id_malloc(&master);
+	snd_mixer_selem_id_set_index(master, 0);
+	snd_mixer_selem_id_set_name(master, audio_mixer);
+
 	snd_mixer_elem_t *elem;
-	if ((elem = snd_mixer_find_selem(handle, snd)) == NULL) {
-		ERR("statb: unable to load audio mixer\n");
+	if ((elem = snd_mixer_find_selem(handle, master)) == NULL) {
+		ERR("statb: unable to load audio mixers\n");
 		return NULL;
+	}
+
+	int audio_switch;
+	snd_mixer_selem_get_playback_switch(elem, 
+		SND_MIXER_SCHN_UNKNOWN, &audio_switch);
+	if (!audio_switch) {
+		memcpy(buf, audio_mute, sizeof(audio_mute) - 1);
+		return buf + sizeof(audio_mute) - 1;
 	}
 
 	long low, high, vol;
 	snd_mixer_selem_get_playback_volume_range(elem, &low, &high);
-	snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_UNKNOWN, &vol);
+	snd_mixer_selem_get_playback_volume(elem,
+		SND_MIXER_SCHN_UNKNOWN, &vol);
 	snd_mixer_close(handle);
 
 	int len = itoa(buf, ((float)vol / (float)high) * 100);
@@ -135,7 +145,8 @@ memory(char *const buf)
 char *
 battery(char *const buf)
 {
-	char len, stat;
+	ssize_t len;
+	char stat;
 	if (
 		lseek(batcap_fd, 0, SEEK_SET) == -1 ||
 		lseek(batstat_fd, 0, SEEK_SET) == -1 ||
@@ -236,14 +247,13 @@ main(void)
 			goto exit;
 		}
 
-		int i;
+		size_t i;
 		for (i = 0; i < sizeof(funcs) / sizeof(struct func); ++i) {
 			memcpy(ptr, sep_open, sizeof(sep_open) - 1);
 			memcpy(ptr + sizeof(sep_open) - 1, funcs[i].iden, funcs[i].iden_len);
 
 			if ((ptr = funcs[i].func(ptr + sizeof(sep_open) +
 				funcs[i].iden_len - 1)) == NULL) {
-				ERR("statb: unable to perform function\n");
 				goto exit;
 			}
 
