@@ -1,6 +1,9 @@
 /* define an error macro or function which takes one char *input */
 #define ERR(info) write(STDERR_FILENO, info, sizeof(info) - 1)
 
+/* define maximum bar length */
+#define BUF_LEN 256
+
 static const char audio_card[] = "default";
 static const char audio_mixer[] = "Master";
 static const char audio_mute[] = "Mute";

@@ -189,8 +189,8 @@ internet(char *const buf)
 	}
 	freeifaddrs(ifaddr);
 
-	memcpy(buf, internet_unavail, sizeof(internet_unavail));
-	return buf + sizeof(internet_unavail);
+	memcpy(buf, internet_unavail, sizeof(internet_unavail) - 1);
+	return buf + sizeof(internet_unavail) - 1;
 }
 
 char *
@@ -201,19 +201,18 @@ datetime(char *const buf)
 
 	if (tm->tm_mday / 10 != 1) {
 		int date = tm->tm_mday % 10;
-		char first, second = 'd' + ('t' & -(date != 1));
-		if (date == 1) {
-			first = 's';
-		} else if (date == 2) {
-			first = 'n';
-		} else {
-			first = 'r';
+		if (date < 3 && date) {
+			char first = 'n', second = 'd';
+
+			if (date == 1)
+				first = 's', second = 't';
+			else if (date == 3)
+				first = 'r';
+
+			date_fmt[ORDIND_DATE] = first;
+			date_fmt[ORDIND_DATE + 1] = second;
 		}
-
-		date_fmt[ORDIND_DATE] = first;
-		date_fmt[ORDIND_DATE + 1] = second;
 	}
-
 	return buf + strftime(buf, 128, date_fmt, tm);
 }
 
@@ -240,7 +239,7 @@ main(void)
 	}
 
 	struct timespec start, cur;
-	char buf[256], *ptr = (char *)buf;
+	char buf[BUF_LEN], *ptr = buf;
 	do {
 		if (clock_gettime(CLOCK_MONOTONIC, &start) == -1) {
 			ERR("statb: unable to get time\n");
@@ -262,7 +261,7 @@ main(void)
 		}
 		memcpy(ptr, name, sizeof(name));
 
-		ptr = (char *)buf;
+		ptr = buf;
 		if (XStoreName(dpy, DefaultRootWindow(dpy), ptr) < 0) {
 			ERR("statb: unable to store name\n");
 			goto exit;
