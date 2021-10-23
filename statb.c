@@ -1,6 +1,5 @@
 /* see LICENCE file for licensing information */
-/* simple stat bar for dwm */
-
+/* statb - simple stat bar */
 #include <alsa/asoundlib.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -158,7 +157,7 @@ battery(char *const buf)
 	}
 
 	buf[0] = bat_stat_char(stat);
-	len += -(len == 3 && buf[3] == '\n');
+	len -= (len == 3 && buf[3] == '\n');
 	buf[len + 1] = '%';
 	return buf + len + 2;
 }
@@ -201,7 +200,7 @@ datetime(char *const buf)
 
 	if (tm->tm_mday / 10 != 1) {
 		int date = tm->tm_mday % 10;
-		if (date < 3 && date) {
+		if (date <= 3 && date) {
 			char first = 'n', second = 'd';
 
 			if (date == 1)

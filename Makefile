@@ -1,5 +1,5 @@
 # see LICENCE file for licensing information
-# statb - simple info bar for dwm
+# statb - simple info bar
 .POSIX:
 
 include config.mk
@@ -15,15 +15,11 @@ options:
 	@echo "LDFLAGS = $(STATBLDFLAGS)"
 	@echo "CC      = $(CC)"
 
-# note for development purposes overwrite
-config.h: config.def.h
+config.h:
 	cp config.def.h config.h
 
 .c.o:
 	$(CC) $(STATBCFLAGS) -c $<
-
-main.o: config.h
-func.o: config.h
 
 $(OBJ): config.h config.mk
 

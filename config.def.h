@@ -1,3 +1,5 @@
+/* see LICENCE file for licensing information */
+/* statb - simple stat bar */
 /* define an error macro or function which takes one char *input */
 #define ERR(info) write(STDERR_FILENO, info, sizeof(info) - 1)
 
