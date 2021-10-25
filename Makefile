@@ -1,5 +1,6 @@
-# see LICENCE file for licensing information
 # statb - simple info bar
+# see LICENCE file for licensing information
+
 .POSIX:
 
 include config.mk

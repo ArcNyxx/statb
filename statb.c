@@ -1,5 +1,8 @@
-/* see LICENCE file for licensing information */
-/* statb - simple stat bar */
+/*
+ * statb - simple info bar
+ * see LICENCE file for licensing information
+ */
+
 #include <alsa/asoundlib.h>
 #include <arpa/inet.h>
 #include <errno.h>

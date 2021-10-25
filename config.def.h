@@ -1,10 +1,11 @@
-/* see LICENCE file for licensing information */
-/* statb - simple stat bar */
-/* define an error macro or function which takes one char *input */
-#define ERR(info) write(STDERR_FILENO, info, sizeof(info) - 1)
+/*
+ * statb - simple stat bar
+ * see LICENCE file for licensing information
+ */
 
-/* define maximum bar length */
-#define BUF_LEN 256
+/* define a macro of function which takes a cstring */
+#define ERR(info) write(STDERR_FILENO, info, sizeof(info) - 1)
+#define BUF_LEN 256 /* maximum output buffer length */
 
 static const char audio_card[] = "default";
 static const char audio_mixer[] = "Master";
