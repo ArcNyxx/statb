@@ -1,5 +1,6 @@
 /*
  * statb - simple stat bar
+ * Copyright (C) 2021 FearlessDoggo21
  * see LICENCE file for licensing information
  */
 
