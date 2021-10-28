@@ -17,6 +17,10 @@
 #include <unistd.h>
 #include <X11/Xlib.h>
 
+#define DOTOKEN(x, y) x ## y
+#define TOKEN(x, y) DOTOKEN(x, y)
+#define SELEM(x) TOKEN(snd_mixer_selem_, x)
+
 typedef struct func Func;
 
 struct func {
@@ -89,7 +93,7 @@ audio(char *const buf)
 	if (
 		snd_mixer_open(&handle, 0) ||
 		snd_mixer_attach(handle, audio_card) ||
-		snd_mixer_selem_register(handle, NULL, NULL) ||
+		SELEM(register(handle, NULL, NULL)) ||
 		snd_mixer_load(handle)
 	) {
 		ERR("statb: unable to load audio mixer\n");
@@ -97,9 +101,9 @@ audio(char *const buf)
 	}
 
 	snd_mixer_selem_id_t *master;
-	snd_mixer_selem_id_malloc(&master);
-	snd_mixer_selem_id_set_index(master, 0);
-	snd_mixer_selem_id_set_name(master, audio_mixer);
+	SELEM(id_malloc(&master));
+	SELEM(id_set_index(master, 0));
+	SELEM(id_set_name(master, audio_mixer));
 
 	snd_mixer_elem_t *elem;
 	if ((elem = snd_mixer_find_selem(handle, master)) == NULL) {
@@ -109,17 +113,15 @@ audio(char *const buf)
 	free(master);
 
 	int audio_switch;
-	snd_mixer_selem_get_playback_switch(elem, 
-		SND_MIXER_SCHN_UNKNOWN, &audio_switch);
+	SELEM(get_playback_switch(elem, SND_MIXER_SCHN_UNKNOWN, &audio_switch));
 	if (!audio_switch) {
 		memcpy(buf, audio_mute, sizeof(audio_mute) - 1);
 		return buf + sizeof(audio_mute) - 1;
 	}
 
 	long low, high, vol;
-	snd_mixer_selem_get_playback_volume_range(elem, &low, &high);
-	snd_mixer_selem_get_playback_volume(elem,
-		SND_MIXER_SCHN_UNKNOWN, &vol);
+	SELEM(get_playback_volume_range(elem, &low, &high));
+	SELEM(get_playback_volume(elem, SND_MIXER_SCHN_UNKNOWN, &vol));
 	snd_mixer_close(handle);
 
 	int len = itoa(buf, ((float)vol / (float)high) * 100);
