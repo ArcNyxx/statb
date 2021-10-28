@@ -106,6 +106,7 @@ audio(char *const buf)
 		ERR("statb: unable to load audio mixers\n");
 		return NULL;
 	}
+	free(master);
 
 	int audio_switch;
 	snd_mixer_selem_get_playback_switch(elem, 
@@ -161,7 +162,7 @@ battery(char *const buf)
 	}
 
 	buf[0] = bat_stat_char(stat);
-	len -= (len == 3 && buf[3] == '\n');
+	len -= (buf[2] == '\n' || buf[3] == '\n');
 	buf[len + 1] = '%';
 	return buf + len + 2;
 }
@@ -172,6 +173,7 @@ internet(char *const buf)
 	struct ifaddrs *ifaddr, *ifa;
 	if (getifaddrs(&ifaddr) == -1) {
 		ERR("statb: unable to get ip addresses\n");
+		ifaddr = NULL;
 	}
 
 	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
@@ -181,17 +183,22 @@ internet(char *const buf)
 
 		if (!strcmp(ifa->ifa_name, wifi_card) &&
 			ifa->ifa_addr->sa_family == AF_INET) {
+#ifndef INTERNET_NOSHOW_IP
 			if (inet_ntop(AF_INET, ifa->ifa_addr->sa_data + 2, buf, 16) == NULL) {
 				ERR("statb: unable to convert ip to text\n");
 				return NULL;
 			}
 			freeifaddrs(ifaddr);
-
 			return buf + strlen(buf);
+#else
+			freeifaddrs(ifaddr);
+			memcpy(buf, internet_connect, sizeof(internet_connect) - 1);
+			return buf + sizeof(internet_connect) - 1;
+#endif
 		}
 	}
-	freeifaddrs(ifaddr);
-
+	if (ifaddr != NULL)
+		freeifaddrs(ifaddr);
 	memcpy(buf, internet_unavail, sizeof(internet_unavail) - 1);
 	return buf + sizeof(internet_unavail) - 1;
 }

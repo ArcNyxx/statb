@@ -19,6 +19,9 @@ static const char mem_path[] = "/proc/meminfo";
 #define BAT_PATH_CAP "/capacity"
 #define BAT_PATH_STAT "/status"
 
+/* define a macro to determine whether ip or only status shown */
+#define INTERNET_NOSHOW_IP
+static const char internet_connect[] = "Connected";
 static const char internet_unavail[] = "Unavailable";
 
 static const char wifi_card[] = "wlp0s20f3";
