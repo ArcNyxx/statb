@@ -89,28 +89,31 @@ bat_stat_char(char c)
 char *
 audio(char *const buf)
 {
-	snd_mixer_t *handle;
+	snd_mixer_t *mixer;
 	if (
-		snd_mixer_open(&handle, 0) ||
-		snd_mixer_attach(handle, audio_card) ||
-		SELEM(register(handle, NULL, NULL)) ||
-		snd_mixer_load(handle)
+		snd_mixer_open(&mixer, 0) ||
+		snd_mixer_attach(mixer, audio_card) ||
+		SELEM(register(mixer, NULL, NULL)) ||
+		snd_mixer_load(mixer)
 	) {
 		ERR("statb: unable to load audio mixer\n");
 		return NULL;
 	}
 
 	snd_mixer_selem_id_t *master;
-	SELEM(id_malloc(&master));
+	if (SELEM(id_malloc(&master))) {
+		ERR("statb: unable to allocate memory\n");
+		return NULL;
+	}
 	SELEM(id_set_index(master, 0));
 	SELEM(id_set_name(master, audio_mixer));
 
 	snd_mixer_elem_t *elem;
-	if ((elem = snd_mixer_find_selem(handle, master)) == NULL) {
+	if ((elem = snd_mixer_find_selem(mixer, master)) == NULL) {
 		ERR("statb: unable to load audio mixers\n");
-		return NULL;
+		memcpy(buf, audio_error, sizeof(audio_error) - 1);
+		return buf + sizeof(audio_error) - 1;
 	}
-	free(master);
 
 	int audio_switch;
 	SELEM(get_playback_switch(elem, SND_MIXER_SCHN_UNKNOWN, &audio_switch));
@@ -122,7 +125,8 @@ audio(char *const buf)
 	long low, high, vol;
 	SELEM(get_playback_volume_range(elem, &low, &high));
 	SELEM(get_playback_volume(elem, SND_MIXER_SCHN_UNKNOWN, &vol));
-	snd_mixer_close(handle);
+	free(master);
+	snd_mixer_close(mixer);
 
 	int len = itoa(buf, ((float)vol / (float)high) * 100);
 	buf[len] = '%';
@@ -174,6 +178,7 @@ internet(char *const buf)
 {
 	struct ifaddrs *ifaddr, *ifa;
 	if (getifaddrs(&ifaddr) == -1) {
+		perror("");
 		ERR("statb: unable to get ip addresses\n");
 		ifaddr = NULL;
 	}
@@ -183,9 +188,10 @@ internet(char *const buf)
 			continue;
 		}
 
-		if (!strcmp(ifa->ifa_name, wifi_card) &&
-			ifa->ifa_addr->sa_family == AF_INET) {
+		if (!strcmp(ifa->ifa_name, wifi_card)) {
 #ifndef INTERNET_NOSHOW_IP
+			if (ifa->ifa_addr->sa_family != AF_INET)
+				continue;
 			if (inet_ntop(AF_INET, ifa->ifa_addr->sa_data + 2, buf, 16) == NULL) {
 				ERR("statb: unable to convert ip to text\n");
 				return NULL;
@@ -243,7 +249,7 @@ main(void)
 		ERR("statb: unable to create file descriptors\n");
 		return 1;
 	}
-
+	
 	Display *dpy;
 	if ((dpy = XOpenDisplay(NULL)) == NULL) {
 		ERR("statb: unable to open root display window\n");

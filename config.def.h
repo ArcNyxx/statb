@@ -11,6 +11,7 @@
 static const char audio_card[] = "default";
 static const char audio_mixer[] = "Master";
 static const char audio_mute[] = "Mute";
+static const char audio_error[] = "Error";
 
 static const char mem_path[] = "/proc/meminfo";
 
