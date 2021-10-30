@@ -178,9 +178,8 @@ internet(char *const buf)
 {
 	struct ifaddrs *ifaddr, *ifa;
 	if (getifaddrs(&ifaddr) == -1) {
-		perror("");
 		ERR("statb: unable to get ip addresses\n");
-		ifaddr = NULL;
+		return NULL;
 	}
 
 	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
@@ -205,8 +204,8 @@ internet(char *const buf)
 #endif
 		}
 	}
-	if (ifaddr != NULL)
-		freeifaddrs(ifaddr);
+	freeifaddrs(ifaddr);
+	
 	memcpy(buf, internet_unavail, sizeof(internet_unavail) - 1);
 	return buf + sizeof(internet_unavail) - 1;
 }
