@@ -4,21 +4,16 @@
  * see LICENCE file for licensing information
  */
 
-/* define a macro of function which takes a cstring */
-#define ERR(info) write(STDERR_FILENO, info, sizeof(info) - 1)
 #define BUF_LEN 256 /* maximum output buffer length */
 
 static const char audio_card[] = "default";
 static const char audio_mixer[] = "Master";
 static const char audio_mute[] = "Mute";
-static const char audio_error[] = "Error";
 
 static const char mem_path[] = "/proc/meminfo";
 
-#define BAT_PATH "/sys/class/power_supply/"
-#define BAT "BAT1"
-#define BAT_PATH_CAP "/capacity"
-#define BAT_PATH_STAT "/status"
+static const char batcap_path[] = "/sys/class/power_supply/BAT1/capacity";
+static const char batstat_path[] = "/sys/class/power_supply/BAT1/status";
 
 /* define a macro to determine whether ip or only status shown */
 #define INTERNET_NOSHOW_IP

@@ -1,5 +1,5 @@
 statb - simple info bar
-================
+=======================
 statb is a simple info bar for window managers which output WM_NAME as an info
 bar.
 
