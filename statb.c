@@ -32,32 +32,32 @@ typedef struct func {
 	size_t iden_len;
 } Func;
 
-void term(const int sig);
-void destroy(void);
-void die(const char *error, const size_t len);
+static void term(const int sig);
+static void destroy(void);
+static void die(const char *error, const size_t len);
 
-int itoa(char *const buf, unsigned int num);
+static int itoa(char *const buf, unsigned int num);
 
-char *audio(char *const buf);
-char *memory(char *const buf);
-char *battery(char *const buf);
-char *internet(char *const buf);
-char *datetime(char *const buf);
+static char *audio(char *const buf);
+static char *memory(char *const buf);
+static char *battery(char *const buf);
+static char *internet(char *const buf);
+static char *datetime(char *const buf);
 
 static volatile sig_atomic_t running = 1;
-int batcap_fd, batstat_fd, memstat_fd;
-Display *dpy;
+static int batcap_fd, batstat_fd, memstat_fd;
+static Display *dpy;
 
 #include "config.h"
 
-void
+static void
 term(const int sig)
 {
 	(void)sig;
 	running = 0;
 }
 
-void
+static void
 destroy(void)
 {
 	XStoreName(dpy, DefaultRootWindow(dpy), NULL);
@@ -65,14 +65,14 @@ destroy(void)
 	XCloseDisplay(dpy);
 }
 
-void
+static void
 die(const char *error, const size_t len)
 {
 	write(STDERR_FILENO, error, len);
 	exit(1);
 }
 
-int
+static int
 itoa(char *const buf, unsigned int num)
 {
 	int i = 0, j = 0;
@@ -90,7 +90,7 @@ itoa(char *const buf, unsigned int num)
 	return i;
 }
 
-char *
+static char *
 audio(char *const buf)
 {
 	snd_mixer_t *mixer;
@@ -130,7 +130,7 @@ audio(char *const buf)
 	return buf + len + 1;
 }
 
-char *
+static char *
 memory(char *const buf)
 {
 	static char tmpbuf[52];
@@ -149,7 +149,7 @@ memory(char *const buf)
 	return buf + len + 1;
 }
 
-char *
+static char *
 battery(char *const buf)
 {
 	ssize_t len;
@@ -183,7 +183,7 @@ battery(char *const buf)
 	return buf + len + 2;
 }
 
-char *
+static char *
 internet(char *const buf)
 {
 	struct ifaddrs *ifaddr, *ifa;
@@ -213,7 +213,7 @@ internet(char *const buf)
 	SIMPLE_WRITE(internet_unavail)
 }
 
-char *
+static char *
 datetime(char *const buf)
 {
 	time_t timep = time(NULL);
