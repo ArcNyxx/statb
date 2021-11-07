@@ -9,36 +9,30 @@ include config.mk
 SRC = statb.c
 OBJ = $(SRC:.c=.o)
 
-all: options statb
-
-options:
-	@echo statb build options:
-	@echo "CFLAGS  = $(STATBCFLAGS)"
-	@echo "LDFLAGS = $(STATBLDFLAGS)"
-	@echo "CC      = $(CC)"
+all: statb
 
 config.h:
 	cp config.def.h config.h
 
-.c.o:
-	$(CC) $(STATBCFLAGS) -c $<
-
 $(OBJ): config.h config.mk
 
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
 statb: $(OBJ)
-	$(CC) -o $@ $(OBJ) $(STATBLDFLAGS)
+	$(CC) $(OBJ) $(LDFLAGS) -o $@
 
 clean:
-	rm -f statb $(OBJ) statb-$(VERSION).tar.gz
+	rm -rf statb $(OBJ) statb-$(VERSION).tar.gz
 
 dist: clean
-	mkdir -p statb-$(VERSION)
-	cp -R LICENCE Makefile README config.mk \
-		config.def.h $(SRC) statb-$(VERSION)
-	tar -cf - statb-$(VERSION) | gzip > statb-$(VERSION).tar.gz
-	rm -rf statb-$(VERSION)
+	mkdir -p dwm-$(VERSION)
+	cp -R LICENCE README Makefile config.mk $(SRC) config.def.h dwm-$(VERSION)
+	tar -cf dwm-$(VERSION).tar dwm-$(VERSION)
+	gzip dwm-$(VERSION).tar
+	rm -rf dwm-$(VERSION)
 
-install: statb
+install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp -f statb $(DESTDIR)$(PREFIX)/bin
 	chmod 755 $(DESTDIR)$(PREFIX)/bin/statb
@@ -46,4 +40,10 @@ install: statb
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/statb
 
-.PHONY: all options clean dist install uninstall
+options:
+	@echo statb build options
+	@echo "CFLAGS = $(CFLAGS)"
+	@echo "LDFLAGS = $(LDFLAGS)"
+
+# implementation defined
+.PHONY: all clean dist install uninstall options
