@@ -5,6 +5,7 @@
 VERSION = 0.1.1
 
 PREFIX = /usr/local
+MANPREFIX = $(PREFIX)/share/man
 
 WPROFILE = -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes \
 -Wmissing-declarations -Wswitch-default -Wunreachable-code -Wcast-align \
