@@ -34,10 +34,9 @@ dist: clean
 	rm -rf statb-$(VERSION)
 
 install: all
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(MANPREFIX)/man1
 	cp -f statb $(DESTDIR)$(PREFIX)/bin
 	chmod 755 $(DESTDIR)$(PREFIX)/bin/statb
-	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
 	sed "s/VERSION/$(VERSION)/g" < statb.1 > $(DESTDIR)$(MANPREFIX)/man1/statb.1
 	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/statb.1
 
