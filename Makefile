@@ -27,7 +27,7 @@ clean:
 
 dist: clean
 	mkdir -p statb-$(VERSION)
-	cp -R LICENCE README Makefile statb.1 config.mk $(SRC) config.def.h \
+	cp -R LICENCE README Makefile config.mk statb.1 $(SRC) config.def.h \
 		statb-$(VERSION)
 	tar -cf statb-$(VERSION).tar statb-$(VERSION)
 	gzip statb-$(VERSION).tar
