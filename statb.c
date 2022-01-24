@@ -216,22 +216,29 @@ internet(char *const buf)
 static char *
 datetime(char *const buf)
 {
-	time_t timep = time(NULL);
-	struct tm *tm = localtime(&timep);
-	if (tm->tm_mday / 10 != 1) {
-		int date = tm->tm_mday % 10;
-		if (date <= 3 && date) {
-			char first = 'n', second = 'd';
-			if (date == 1)
-				first = 's', second = 't';
-			else if (date == 3)
-				first = 'r';
+#define DATE_CASE(num, first, second) \
+case num: \
+	date_fmt[ORDIND_DATE] = first; \
+	date_fmt[ORDIND_DATE + 1] = second; \
+	break;
 
-			date_fmt[ORDIND_DATE] = first;
-			date_fmt[ORDIND_DATE + 1] = second;
+	/* get human interpretable time */
+	time_t timep = time(NULL);
+	struct tm *timeh = localtime(&timep);
+
+	/* get ordinal numbered date correctly */
+	if (timeh->tm_mday / 10 != 1)
+		switch (timeh->tm_mday % 10) {
+		DATE_CASE(1, 's', 't')
+		DATE_CASE(2, 'n', 'd')
+		DATE_CASE(3, 'r', 'd')
+		default:
+			date_fmt[ORDIND_DATE] = 't';
+			date_fmt[ORDIND_DATE + 1] = 'h';
+			break;
 		}
-	}
-	return buf + strftime(buf, 128, date_fmt, tm);
+	return buf + strftime(buf, 128, date_fmt, timeh);
+#undef DATE_CASE
 }
 
 int
