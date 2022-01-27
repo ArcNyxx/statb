@@ -1,8 +1,6 @@
-/*
- * statb - simple info bar
+/* statb - simple info bar
  * Copyright (C) 2021 FearlessDoggo21
- * see LICENCE file for licensing information
- */
+ * see LICENCE file for licensing information */
 
 #include <alsa/asoundlib.h>
 #include <arpa/inet.h>
@@ -17,14 +15,7 @@
 #include <unistd.h>
 #include <X11/Xlib.h>
 
-#define DOTOKEN(x, y) x ## y
-#define TOKEN(x, y) DOTOKEN(x, y)
-#define SELEM(x) TOKEN(snd_mixer_selem_, x)
-
-#define SIMPLE_WRITE(string) \
-memcpy(buf, string, sizeof(string) - 1); \
-return buf + sizeof(string) - 1;
-#define DIE(string) die(string, sizeof(string))
+#include "util.h"
 
 typedef struct func {
 	char *(*func)(char *const);
@@ -33,9 +24,6 @@ typedef struct func {
 } Func;
 
 static void term(const int sig);
-static void destroy(void);
-static void die(const char *error, const size_t len);
-
 static int itoa(char *const buf, unsigned int num);
 
 static char *audio(char *const buf);
@@ -46,7 +34,7 @@ static char *datetime(char *const buf);
 
 static volatile sig_atomic_t running = 1;
 static int batcap_fd, batstat_fd, memstat_fd;
-static Display *dpy;
+Display *dpy;
 
 #include "config.h"
 
@@ -55,21 +43,6 @@ term(const int sig)
 {
 	(void)sig;
 	running = 0;
-}
-
-static void
-destroy(void)
-{
-	XStoreName(dpy, DefaultRootWindow(dpy), NULL);
-	XFlush(dpy);
-	XCloseDisplay(dpy);
-}
-
-static void
-die(const char *error, const size_t len)
-{
-	write(STDERR_FILENO, error, len);
-	exit(1);
 }
 
 static int
@@ -95,50 +68,46 @@ audio(char *const buf)
 {
 	snd_mixer_t *mixer;
 	if (
-		snd_mixer_open(&mixer, 0) ||
-		snd_mixer_attach(mixer, audio_card) ||
-		SELEM(register(mixer, NULL, NULL)) ||
-		snd_mixer_load(mixer)
+		snd_mixer_open(&mixer, 0) != 0 ||
+		snd_mixer_attach(mixer, audio_card) != 0 ||
+		snd_mixer_selem_register(mixer, NULL, NULL) != 0 ||
+		snd_mixer_load(mixer) != 0
 	)
-		DIE("statb: unable to load audio mixer\n");
+		die("statb: unable to load audio mixer\n");
 
 	snd_mixer_selem_id_t *master;
-	if (SELEM(id_malloc(&master)))
-		DIE("statb: unable to allocate memory\n");
-	SELEM(id_set_index(master, 0));
-	SELEM(id_set_name(master, audio_mixer));
+	if (snd_mixer_selem_id_malloc(&master))
+		die("statb: unable to allocate memory");
+	snd_mixer_selem_id_set_index(master, 0);
+	snd_mixer_selem_id_set_name(master, audio_mixer);
 
 	snd_mixer_elem_t *elem;
 	if ((elem = snd_mixer_find_selem(mixer, master)) == NULL)
-		DIE("statb: unable to load audio mixers\n");
-	free(master);
+		die("statb: unable to load audio mixers\n");
 
-	int audio_switch;
-	SELEM(get_playback_switch(elem, SND_MIXER_SCHN_UNKNOWN, &audio_switch));
-	if (!audio_switch) {
-		snd_mixer_close(mixer);
-		SIMPLE_WRITE(audio_mute)
-	}
-
+	int mute;
 	long low, high, vol;
-	SELEM(get_playback_volume_range(elem, &low, &high));
-	SELEM(get_playback_volume(elem, SND_MIXER_SCHN_UNKNOWN, &vol));
+
+	snd_mixer_selem_get_playback_switch(elem, SND_MIXER_SCHN_UNKNOWN, &mute);
+	snd_mixer_selem_get_playback_volume_range(elem, &low, &high);
+	snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_UNKNOWN, &vol);
+
+	free(master);
 	snd_mixer_close(mixer);
 
-	int len = itoa(buf, ((float)vol / (float)high) * 100);
-	buf[len] = '%';
-	return buf + len + 1;
+	buf[0] = mute ? 'u' : 'm';
+	int len = itoa(buf + 1, ((float)vol / (float)high) * 100);
+	buf[len + 1] = '%';
+	return buf + len + 2;
 }
 
 static char *
 memory(char *const buf)
 {
 	static char tmpbuf[52];
-	if (
-		lseek(memstat_fd, 0, SEEK_SET) == -1 ||
-		read(memstat_fd, tmpbuf, 52) != 52
-	)
-		DIE("statb: unable to read memory info\n");
+	lseek(memstat_fd, 0, SEEK_SET);
+	if (read(memstat_fd, tmpbuf, 52) != 52)
+		die("statb: unable to read memory info");
 
 	char *endptr;
 	float total = strtol(tmpbuf + 10, &endptr, 10);
@@ -152,32 +121,22 @@ memory(char *const buf)
 static char *
 battery(char *const buf)
 {
-	ssize_t len;
-	char stat;
-	if (
-		lseek(batcap_fd, 0, SEEK_SET) == -1 ||
-		lseek(batstat_fd, 0, SEEK_SET) == -1 ||
-		(len = read(batcap_fd, buf + 1, 3)) == -1 ||
-		read(batstat_fd, &stat, 1) != 1
-	)
-		DIE("statb: unable to read battery info\n");
+	size_t len;
+	lseek(batcap_fd, 0, SEEK_SET);
+	lseek(batstat_fd, 0, SEEK_SET);
+	if ((len = read(batcap_fd, buf + 1, 3)) == (size_t)-1 ||
+			read(batstat_fd, &buf[0], 1) != 1)
+		die("statb: unable to read files");
 
-        switch (stat) {
-        case 'F':
-                buf[0] = 'f';
-		break;
-        case 'C':
-                buf[0] = '+';
-		break;
-        case 'D':
-                buf[0] = '-';
-		break;
-        case 'U':
-                buf[0] = 'x';
-		break;
-        default:
-                return NULL;
-        }
+	static const struct {
+		char read, new;
+	} conv[] = { { 'F', 'f' }, { 'C', '+' }, { 'D', '-' }, { 'U', 'x' } };
+	for (size_t i = 0; i < 4; ++i)
+		if (buf[0] == conv[i].read) {
+			buf[0] = conv[i].new;
+			break;
+		}
+	
 	len -= (buf[2] == '\n' || buf[3] == '\n');
 	buf[len + 1] = '%';
 	return buf + len + 2;
@@ -188,7 +147,7 @@ internet(char *const buf)
 {
 	struct ifaddrs *ifaddr, *ifa;
 	if (getifaddrs(&ifaddr) == -1)
-		DIE("statb: unable to get ip addresses\n");
+		die("statb: unable to get ip addresses");
 
 	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
 		if (ifa->ifa_addr == NULL)
@@ -200,17 +159,19 @@ internet(char *const buf)
 
 #ifdef INTERNET_NOSHOW_IP
 			freeifaddrs(ifaddr);
-			SIMPLE_WRITE(internet_connect)
+			memcpy(buf, internet_connect, sizeof(internet_connect) - 1);
+			return buf + sizeof(internet_connect) - 1;
 #else
 			if (inet_ntop(AF_INET, ifa->ifa_addr->sa_data + 2, buf, 16) == NULL)
-				DIE("statb: unable to convert ip to text\n");
+				die("statb: unable to convert ip to text");
 			freeifaddrs(ifaddr);
 			return buf + strlen(buf);
 #endif /* INTERNET_NOSHOW_IP */
 		}
 	}
 	freeifaddrs(ifaddr);
-	SIMPLE_WRITE(internet_unavail)
+	memcpy(buf, internet_unavail, sizeof(internet_unavail) - 1);
+	return buf + sizeof(internet_unavail) - 1;
 }
 
 static char *
@@ -249,22 +210,21 @@ main(void)
 		(batstat_fd = open(batstat_path, O_RDONLY)) == -1 ||
 		(memstat_fd = open(mem_path, O_RDONLY)) == -1
 	)
-		DIE("statb: unable to create file descriptors\n");
+		die("statb: unable to create file descriptors");
 	
 	if ((dpy = XOpenDisplay(NULL)) == NULL)
-		DIE("statb: unable to open root display window\n");
+		die("statb: unable to open root display window\n");
 
 	struct sigaction act = { 0 };
 	act.sa_handler = term;
 	sigaction(SIGINT, &act, NULL);
 	sigaction(SIGTERM, &act, NULL);
-	atexit(destroy);
 
 	struct timespec start, cur;
 	char buf[BUF_LEN], *ptr = buf;
 	do {
 		if (clock_gettime(CLOCK_MONOTONIC, &start) == -1)
-			DIE("statb: unable to get time\n");
+			die("statb: unable to get time");
 
 		size_t i;
 		for (i = 0; i < sizeof(funcs) / sizeof(Func); ++i) {
@@ -280,17 +240,21 @@ main(void)
 
 		ptr = buf;
 		if (XStoreName(dpy, DefaultRootWindow(dpy), ptr) < 0)
-			DIE("statb: unable to store name\n");
+			die("statb: unable to store name\n");
 		XFlush(dpy);
 
+		/* messy maths to ensure each cycle is exactly 0.5 seconds */
 		if (clock_gettime(CLOCK_MONOTONIC, &cur) == -1)
-			DIE("statb: unable to get time\n");
+			die("statb: unable to get time");
 		cur.tv_sec = 0;
 		cur.tv_nsec = cur.tv_nsec - start.tv_nsec +
 			((cur.tv_nsec < start.tv_nsec) * 1E9);
 		cur.tv_nsec = 5E8 - cur.tv_nsec + ((5E8 < cur.tv_nsec) * 1E9);
 		if (nanosleep(&cur, NULL) == -1 && errno != EINTR)
-			DIE("statb: unable to sleep\n");
+			die("statb: unable to sleep");
 	} while (running);
-	exit(0);
+
+	XStoreName(dpy, DefaultRootWindow(dpy), NULL);
+        XFlush(dpy);
+        XCloseDisplay(dpy);
 }

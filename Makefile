@@ -1,12 +1,12 @@
 # statb - simple info bar
-# Copyright (C) 2021 FearlessDoggo21
+# Copyright (C) 2021-2022 FearlessDoggo21
 # see LICENCE file for licensing information
 
 .POSIX:
 
 include config.mk
 
-SRC = statb.c
+SRC = statb.c util.c
 OBJ = $(SRC:.c=.o)
 
 all: statb
