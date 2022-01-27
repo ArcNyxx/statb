@@ -18,19 +18,18 @@
 #include "util.h"
 
 typedef struct func {
-	char *(*func)(char *const);
+	char *(*func)(char *);
 	const char *iden;
 	size_t iden_len;
 } Func;
 
 static void term(const int sig);
-static int itoa(char *const buf, unsigned int num);
 
-static char *audio(char *const buf);
-static char *memory(char *const buf);
-static char *battery(char *const buf);
-static char *internet(char *const buf);
-static char *datetime(char *const buf);
+static char *audio(char *buf);
+static char *memory(char *buf);
+static char *battery(char *buf);
+static char *internet(char *buf);
+static char *datetime(char *buf);
 
 static volatile sig_atomic_t running = 1;
 static int batcap_fd, batstat_fd, memstat_fd;
@@ -45,26 +44,8 @@ term(const int sig)
 	running = 0;
 }
 
-static int
-itoa(char *const buf, unsigned int num)
-{
-	int i = 0, j = 0;
-	char tmpbuf[3];
-	do {
-		tmpbuf[i] = '0' + (num % 10);
-		num /= 10;
-		++i;
-	} while(num);
-
-	while (j != i) {
-		buf[j] = tmpbuf[i - j - 1];
-		++j;
-	}
-	return i;
-}
-
 static char *
-audio(char *const buf)
+audio(char *buf)
 {
 	snd_mixer_t *mixer;
 	if (
@@ -96,13 +77,13 @@ audio(char *const buf)
 	snd_mixer_close(mixer);
 
 	buf[0] = mute ? 'u' : 'm';
-	int len = itoa(buf + 1, ((float)vol / (float)high) * 100);
+	size_t len = ultostr(((float)vol / (float)high) * 100, buf + 1);
 	buf[len + 1] = '%';
 	return buf + len + 2;
 }
 
 static char *
-memory(char *const buf)
+memory(char *buf)
 {
 	static char tmpbuf[52];
 	lseek(memstat_fd, 0, SEEK_SET);
@@ -113,13 +94,13 @@ memory(char *const buf)
 	float total = strtol(tmpbuf + 10, &endptr, 10);
 	float free = strtol(endptr + 13, NULL, 10);
 
-	int len = itoa(buf, ((total - free) / total) * 100);
+	size_t len = ultostr(((total - free) / total) * 100, buf);
 	buf[len] = '%';
 	return buf + len + 1;
 }
 
 static char *
-battery(char *const buf)
+battery(char *buf)
 {
 	size_t len;
 	lseek(batcap_fd, 0, SEEK_SET);
@@ -143,7 +124,7 @@ battery(char *const buf)
 }
 
 static char *
-internet(char *const buf)
+internet(char *buf)
 {
 	struct ifaddrs *ifaddr, *ifa;
 	if (getifaddrs(&ifaddr) == -1)
@@ -175,7 +156,7 @@ internet(char *const buf)
 }
 
 static char *
-datetime(char *const buf)
+datetime(char *buf)
 {
 #define DATE_CASE(num, first, second) \
 case num: \

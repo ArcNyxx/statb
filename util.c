@@ -32,3 +32,21 @@ die(const char *fmt, ...)
 
 	exit(1);
 }
+
+size_t
+ultostr(size_t num, char *buf)
+{
+	size_t index = 0, total = 0;
+	while (num != 0) {
+		buf[total] = '0' + (num % 10);
+		num /= 10;
+		++total;
+	}
+	while (index < total / 2) {
+		buf[index] += buf[total - index - 1];
+		buf[total - index - 1] = buf[index] - buf[total - index - 1];
+		buf[index] -= buf[total - index - 1];
+		++index;
+	}
+	return total;
+}
