@@ -1,22 +1,33 @@
+.\" statb - simple info output
+.\" Copyright (C) 2021-2022 FearlessDoggo21
+.\" see LICENCE file for licensing information
 .TH STATB 1 statb\-VERSION
 .SH NAME
-statb \- simple info bar
+statb \- simple info output
 .SH SYNOPSIS
 \fBstatb\fR
 .SH DESCRIPTION
-\fBstatb\fR is a simple info bar for window managers which output \fBWM_NAME\fR
-as an info bar.  It supports audio with ALSA, memory, battery life, internet,
-and datetime with a small label.
+\fIstatb\fR(1) is a utility to edit the \fIWM_NAME\fR property of the root
+\fBxorg\fR(1) window.  This is what \fBdwm\fR(1) and other simple window
+managers read to display a simple textual bar on screen.  \fBstatb\fR(1) takes
+advantage of this to provide a modular method of adding different pieces of
+useful information, such as audio volume, battery charge, and internet
+connectivity.
 .SH USAGE
-\fBstatb\fR can be run by adding it into to your \fB.xinitrc\fR file. It can
-alternatively be started while a window manager is already running.
+\fBstatb\fR(1) can be run by adding it into to your \fI.xinitrc\fR file.  It
+can alternatively be started while a window manager is already running.
 .SH CUSTOMISATION
-\fBstatb\fR is customised by creating a custom config.h and (re)compiling the
-source code.  This keeps it fast, secure, and simple.
+\fBstatb\fR(1) is customised by creating a custom config.h and (re)compiling
+the source code.  This keeps it fast, secure, and simple.
 .SH SEE ALSO
-.BR dwm "(1), " xinit (1)
+\fBdwm\fR(1), \fBxinit\fR(1), \fBxorg\fR(1)
 .SH BUGS
-\fBstatb\fR will sometimes crash when switching to another tty.
+\fBstatb\fR(1) will sometimes crash when switching to another tty.
 .PP
-Send all bug reports to https://github.com/fearlessdoggo21/statb/issues, and
-all patches to https://github.com/fearlessdoggo21/statb/pulls.
+\fBstatb\fR(1) seems to not work on some systems.  Similarities between these
+systems normally include not having batteries (required for the battery module)
+and not using ALSA for the main audio control.  If these modules are removed,
+\fBstatb\fR(1) should function normally.
+.PP
+Send all bug reports to \fIhttps://github.com/fearlessdoggo21/statb/issues\fR,
+and all patches to \fIhttps://github.com/fearlessdoggo21/statb/pulls\fR.

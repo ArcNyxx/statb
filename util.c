@@ -1,4 +1,4 @@
-/* statb - simple info bar
+/* statb - simple info output
  * Copyright (C) 2022 FearlessDoggo21
  * see LICENCE file for licensing information */
 

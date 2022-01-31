@@ -1,22 +1,24 @@
-statb - simple info bar
-=======================
-statb is a simple info bar for window managers which output WM_NAME as an info
-bar.
+statb - simple info output
+==========================
+statb is a utility to edit the WM_NAME property of the root X window. This is
+what dwm and other simple window managers read to display a simple textual bar
+on screen. statb takes advantage of this to provide a modular method of adding
+different pieces of useful information, such as audio volume, battery charge,
+and internet connectivity.
 
 Requirements
 ------------
-Edit config.mk to match your local setup
+Edit config.mk to match your local setup.
 
 Afterwards enter the following command to build and install statb (if
-necessary as root):
+necessary, as root):
 
     make clean install
 
 
 Running statb
 -------------
-Add the following line the your .xinitrc in the middle to start statb using
-startx:
+Add the following line the your .xinitrc to start statb using startx:
 
     statb &
 
@@ -24,4 +26,4 @@ startx:
 Configuration
 -------------
 The configuration of statb is done by creating a custom config.h and
-(re)compiling the source code.
+(re)compiling the source code. This keeps it fast, secure, and simple.
