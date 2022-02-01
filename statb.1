@@ -8,27 +8,43 @@ statb \- simple info output
 .SY statb
 .YS
 .SH DESCRIPTION
-\fIstatb\fR(1) is a utility to edit the \fIWM_NAME\fR property of the root
-\fBxorg\fR(1) window.  This is what \fBdwm\fR(1) and other simple window
-managers read to display a simple textual bar on screen.  \fBstatb\fR(1) takes
-advantage of this to provide a modular method of adding different pieces of
-useful information, such as audio volume, battery charge, and internet
+.BR statb (1)
+is a utility to edit the
+.I WM_NAME
+property of the root
+.BR xorg (1)
+window.  This is what
+.BR dwm (1)
+and other simple window managers read to display a simple textual bar on
+screen.  
+.BR statb (1)
+takes advantage of this to provide a modular method of adding different pieces
+of useful information, such as audio volume, battery charge, and internet
 connectivity.
 .SH USAGE
-\fBstatb\fR(1) can be run by adding it into to your \fI.xinitrc\fR file.  It
-can alternatively be started while a window manager is already running.
+.BR statb (1)
+can be run by adding it into to your
+.I .xinitrc
+file.  It can alternatively be started while a window manager is already
+running.
 .SH CUSTOMISATION
-\fBstatb\fR(1) is customised by creating a custom \fIconfig.h\fP and
-(re)compiling the source code.  Source code modification to configure a program
+.BR statb (1)
+is customised by creating a custom
+.I config.h
+and (re)compiling the source code.  Source code modification to configure
+.BR statb (1)
 keeps it fast, secure, and simple.
 .SH BUGS
-\fBstatb\fR(1) will sometimes crash when switching to another tty.
+.BR statb (1)
+will sometimes crash when switching to another tty.
 .PP
-\fBstatb\fR(1) seems to not work on some systems.  Similarities between these
-systems normally include not having batteries (required for the battery module)
-and not using ALSA for the main audio control.  If these modules are removed,
-\fBstatb\fR(1) should function normally.
+.BR statb (1)
+seems to not work on some systems.  Similarities between these systems normally
+include not having batteries (required for the battery module) and not using
+ALSA for the main audio control.  If these modules are removed,
+.BR statb (1)
+should function normally.
 .SH AUTHOR
 Written by FearlessDoggo21.
 .SH SEE ALSO
-\fBdwm\fR(1), \fBxinit\fR(1), \fBxorg\fR(1)
+.BR dwm "(1), " xinit "(1), " xorg (1)
