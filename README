@@ -6,7 +6,19 @@ on screen. statb takes advantage of this to provide a modular method of adding
 different pieces of useful information, such as audio volume, battery charge,
 and internet connectivity.
 
+Using statb
+-----------
+Add the following line the your .xinitrc to start statb using startx:
+
+    statb &
+
+
 Requirements
+------------
+In order to build statb, you need the Xlib and ALSA header files.
+
+
+Installation
 ------------
 Edit config.mk to match your local setup.
 
@@ -14,13 +26,6 @@ Afterwards enter the following command to build and install statb (if
 necessary, as root):
 
     make clean install
-
-
-Running statb
--------------
-Add the following line the your .xinitrc to start statb using startx:
-
-    statb &
 
 
 Configuration
